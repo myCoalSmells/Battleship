@@ -27,7 +27,7 @@ class BoardImpl
 BoardImpl::BoardImpl(const Game& g)
  : m_game(g)
 {
-    // This compiles, but may not be correct //ok so basically
+    // This compiles, but may not be correct //ok so basically im monky
 }
 
 void BoardImpl::clear()
