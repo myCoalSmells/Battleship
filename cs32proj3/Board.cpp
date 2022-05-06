@@ -210,6 +210,7 @@ void BoardImpl::display(bool shotsOnly) const
 
 bool BoardImpl::attack(Point p, bool& shotHit, bool& shipDestroyed, int& shipId)
 {
+    
     return false; // This compiles, but may not be correct
 }
 
