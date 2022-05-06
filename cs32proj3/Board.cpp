@@ -210,8 +210,54 @@ void BoardImpl::display(bool shotsOnly) const
 
 bool BoardImpl::attack(Point p, bool& shotHit, bool& shipDestroyed, int& shipId)
 {
+    if(!m_game.isValid(p)){ //return false if point is not on board
+        shotHit = false;
+        shipDestroyed = false;
+        return false;
+    }
     
-    return false; // This compiles, but may not be correct
+    if(m_board[p.r][p.c]=='o' || m_board[p.r][p.c]=='X' || m_board[p.r][p.c]=='#'){ //DONT KNOW ABOUT #, return false if point already attacked
+        shotHit = false;
+        shipDestroyed = false;
+        return false;
+    }
+    
+    if(m_board[p.r][p.c]=='.'){ //return true if hit water
+        shotHit = false;
+        shipDestroyed = false;
+        m_board[p.r][p.c] = 'o';
+        return true;
+    }
+    
+    else{ //when a ship is hit
+        char temp = m_board[p.r][p.c]; //stores the hit ship symbol
+        m_board[p.r][p.c] = 'X'; //sets hit point to X, to represent being hit
+        shotHit = true; //set shotHit to true because ship was hit
+        
+        for(int i=0; i<m_game.rows(); i++){
+            for(int j=0; j<m_game.cols(); j++){
+                if(m_board[p.r][p.c]==temp){ //looks through board and if the hit ship symbol remains, it means the ship is not sunk, therefore set shipDestroyed to false, and return true
+                    shipDestroyed = false;
+                    return true;
+                }
+            }
+        }
+        
+        //The following is what occurs if the ship is sunk
+        for(int i=0; i<m_shipIDs.size(); i++){
+            if(m_game.shipSymbol(m_shipIDs.at(i))==temp){ //look through m_shipIDs and find the ship that corresponds to the hit symbol
+                shipId = m_shipIDs.at(i); //set that ship to shipId
+                break;
+            }
+        }
+        
+        m_sunkShips.push_back(shipId); //add sunken ship to m_sunkShips
+        shipDestroyed = true; //ship was destroyed
+        return true; //return true bc a ship was hit
+        
+    }
+    
+    return false;
 }
 
 bool BoardImpl::allShipsDestroyed() const
