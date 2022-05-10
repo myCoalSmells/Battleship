@@ -87,10 +87,34 @@ public:
     virtual bool isHuman() const;
     virtual bool placeShips(Board& b);
     virtual Point recommendAttack();
-    virtual void recordAttackResult(Point p, bool validShot, bool shotHit,
-                                        bool shipDestroyed, int shipId);
+    virtual void recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId);
     virtual void recordAttackByOpponent(Point p);
+private:
+    Point m_lastCellAttacked;
 };
+
+HumanPlayer::HumanPlayer(string nm, const Game& g) : Player(nm, g), m_lastCellAttacked(0,0){}
+
+bool HumanPlayer::isHuman() const{
+    return true;
+}
+
+bool HumanPlayer::placeShips(Board& b){
+    return false;
+}
+
+Point HumanPlayer::recommendAttack(){
+    Point p(0,0);
+    return p;
+}
+
+void HumanPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId){
+    ;
+}
+
+void HumanPlayer::recordAttackByOpponent(Point p){
+    ;
+}
 
 
 
@@ -103,9 +127,40 @@ public:
 
 // TODO:  You need to replace this with a real class declaration and
 //        implementation.
-typedef AwfulPlayer MediocrePlayer;
+//typedef AwfulPlayer MediocrePlayer;
 // Remember that Mediocre::placeShips(Board& b) must start by calling
 // b.block(), and must call b.unblock() just before returning.
+
+
+class MediocrePlayer : public Player {
+public:
+    MediocrePlayer(string nm, const Game& g);
+    virtual bool placeShips(Board& b);
+    virtual Point recommendAttack();
+    virtual void recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId);
+    virtual void recordAttackByOpponent(Point p);
+private:
+    Point m_lastCellAttacked;
+};
+
+MediocrePlayer::MediocrePlayer(string nm, const Game& g) : Player(nm, g), m_lastCellAttacked(0,0){}
+
+bool MediocrePlayer::placeShips(Board &b){
+    return false;
+}
+
+Point MediocrePlayer::recommendAttack(){
+    Point p(0,0);
+    return p;
+}
+
+void MediocrePlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId){
+    ;
+}
+
+void MediocrePlayer::recordAttackByOpponent(Point p){
+    ;
+}
 
 //*********************************************************************
 //  GoodPlayer
@@ -113,7 +168,37 @@ typedef AwfulPlayer MediocrePlayer;
 
 // TODO:  You need to replace this with a real class declaration and
 //        implementation.
-typedef AwfulPlayer GoodPlayer;
+//typedef AwfulPlayer GoodPlayer;
+
+class GoodPlayer : public Player {
+public:
+    GoodPlayer(string nm, const Game& g);
+    virtual bool placeShips(Board& b);
+    virtual Point recommendAttack();
+    virtual void recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId);
+    virtual void recordAttackByOpponent(Point p);
+private:
+    Point m_lastCellAttacked;
+};
+
+GoodPlayer::GoodPlayer(string nm, const Game& g) : Player(nm, g), m_lastCellAttacked(0,0){}
+
+bool GoodPlayer::placeShips(Board &b){
+    return false;
+}
+
+Point GoodPlayer::recommendAttack(){
+    Point p(0,0);
+    return p;
+}
+
+void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId){
+    ;
+}
+
+void GoodPlayer::recordAttackByOpponent(Point p){
+    ;
+}
 
 //*********************************************************************
 //  createPlayer
