@@ -107,12 +107,102 @@ string GameImpl::shipName(int shipId) const
     return m_Ships.at(shipId).m_name; //ID of ship corresponds to index in m_Ships
 }
 
-Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool shouldPause)
+Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool shouldPause) //NOT DONE WITH THE SHITHIT, SHIPDESTROYED VARS YET, WHAT DO THEY DO
 {
+    if(!p1->placeShips(b1)) //p1 places ships
+        return nullptr; //return nullptr if failure to place
+    if(!p2->placeShips(b2)) //p2 places ships
+        return nullptr; //return nullptr if failure to place
     
+    bool shotHit;
+    bool shipDestroyed;
+    int shipId;
+    //GAME PLAY STARTS
+    while(!b1.allShipsDestroyed() || !b2.allShipsDestroyed()){ //game ends once all ships are destroyed
+        
+        cout<<p1->name()<<"'s turn. Board for "<<p2->name()<<": "<<endl; //announce p1 turn
+        Point attackOn2 = p1->recommendAttack(); //gets attacked point through player recommendation
+        b2.display(p1->isHuman()); //display p2's board, if p1 is human display shots only)
+        if(b2.attack(attackOn2, shotHit, shipDestroyed, shipId)){ //first player attacks
+            if(!shotHit) //if hit water
+                cout<<p1->name()<<" attacked "<<"("<<attackOn2.r<<","<<attackOn2.c<<")"<<" and missed, resulting in: "<<endl;
+            else{
+                if(shipDestroyed) //if destroyed ship
+                    cout<<p1->name()<<" attacked "<<"("<<attackOn2.r<<","<<attackOn2.c<<")"<<" and destroyed the "<<p2->game().shipName(shipId)<<", resulting in: "<<endl;
+                else{ //if hit shit without destroying
+                    cout<<p1->name()<<" attacked "<<"("<<attackOn2.r<<","<<attackOn2.c<<")"<<" and hit something, resulting in: "<<endl;
+                }
+            }
+            p1->recordAttackResult(attackOn2, true, shotHit, shipDestroyed, shipId); //record valid attack
+            p2->recordAttackByOpponent(attackOn2); //record attack from opponent
+            
+        }
+        else{ //invalid attack
+            cout<<p1->name()<<" wasted a shot at " <<"("<<attackOn2.r<<","<<attackOn2.c<<")"<<endl;
+            p1->recordAttackResult(attackOn2, false, shotHit, shipDestroyed, shipId); //record invalid attack IDK IF I NEED THIS
+        }
+        b2.display(p1->isHuman()); //display result of attack on b2
+        
+        //pause game if necessary
+        if(p1->isHuman()){
+            if(shouldPause)
+                waitForEnter();
+        }
+        else{
+            if(shouldPause)
+                waitForEnter();
+        }
+        
+        //repeat for p2
+        
+        cout<<endl;
+        cout<<p2->name()<<"'s turn. Board for "<<p1->name()<<": "<<endl;
+        Point attackOn1 = p2->recommendAttack();
+        b1.display(p2->isHuman());
+        if(b1.attack(attackOn1, shotHit, shipDestroyed, shipId)){
+            if(!shotHit) //if hit water
+                cout<<p2->name()<<" attacked "<<"("<<attackOn1.r<<","<<attackOn1.c<<")"<<" and missed, resulting in: "<<endl;
+            else{
+                if(shipDestroyed) //if destroyed ship
+                    cout<<p2->name()<<" attacked "<<"("<<attackOn1.r<<","<<attackOn1.c<<")"<<" and destroyed the "<<p1->game().shipName(shipId)<<", resulting in: "<<endl;
+                else{ //if hit shit without destroying
+                    cout<<p2->name()<<" attacked "<<"("<<attackOn1.r<<","<<attackOn1.c<<")"<<" and hit something, resulting in: "<<endl;
+                }
+            }
+            p2->recordAttackResult(attackOn1, true, shotHit, shipDestroyed, shipId); //record valid attack
+            p1->recordAttackByOpponent(attackOn1); //record attack from opponent
+            
+        }
+        else{ //invalid attack
+            cout<<p2->name()<<" wasted a shot at " <<"("<<attackOn1.r<<","<<attackOn1.c<<")"<<endl;
+            p2->recordAttackResult(attackOn1, false, shotHit, shipDestroyed, shipId); //record invalid attack IDK IF I NEED THIS
+            
+        }
+        b2.display(p1->isHuman()); //display result of attack on b1
+    }
     
+    //pause game if necessary
+    if(p2->isHuman()){
+        if(shouldPause)
+            waitForEnter();
+    }
+    else{
+        if(shouldPause)
+            waitForEnter();
+    }
     
+    //game over
+    if(b1.allShipsDestroyed()){ //if p1 lost
+        if(p1->isHuman()) //and is human
+            b2.display(false); //display board of p2
+        return p2; //return p2 as winner
+    }
     
+    if(b2.allShipsDestroyed()){ //if p2 lost
+        if(p2->isHuman()) //and is human
+            b1.display(false); //display board of p1
+        return p1; //return p1 as winner
+    }
     return nullptr;  // This compiles but may not be correct
 }
 

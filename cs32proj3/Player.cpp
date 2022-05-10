@@ -79,7 +79,23 @@ bool getLineWithTwoIntegers(int& r, int& c)
 
 // TODO:  You need to replace this with a real class declaration and
 //        implementation.
-typedef AwfulPlayer HumanPlayer;
+
+
+class HumanPlayer : public Player {
+public:
+    HumanPlayer(string nm, const Game& g);
+    virtual bool isHuman() const;
+    virtual bool placeShips(Board& b);
+    virtual Point recommendAttack();
+    virtual void recordAttackResult(Point p, bool validShot, bool shotHit,
+                                        bool shipDestroyed, int shipId);
+    virtual void recordAttackByOpponent(Point p);
+};
+
+
+
+
+//typedef AwfulPlayer HumanPlayer;
 
 //*********************************************************************
 //  MediocrePlayer
