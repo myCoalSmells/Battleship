@@ -89,11 +89,9 @@ public:
     virtual Point recommendAttack();
     virtual void recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId);
     virtual void recordAttackByOpponent(Point p);
-private:
-    Point m_lastCellAttacked;
 };
 
-HumanPlayer::HumanPlayer(string nm, const Game& g) : Player(nm, g), m_lastCellAttacked(0,0){} //constructor
+HumanPlayer::HumanPlayer(string nm, const Game& g) : Player(nm, g){} //constructor
 
 bool HumanPlayer::isHuman() const{
     return true; //return true because is human
@@ -141,7 +139,6 @@ bool HumanPlayer::placeShips(Board& b){
             }
         }
     }
-    b.display(false);
     return true;
 }
 
@@ -153,7 +150,7 @@ Point HumanPlayer::recommendAttack(){
         cout<<"You must enter two integers."<<endl;
         cout<<"Enter row and column of leftmost cell (e.g. 3 5): "; //reprompt coordinates
     }
-    p.r =r;
+    p.r = r;
     p.c = c;
     return p;
 }
@@ -165,8 +162,6 @@ void HumanPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool
 void HumanPlayer::recordAttackByOpponent(Point p){
     ; //human does not need this
 }
-
-
 
 
 //typedef AwfulPlayer HumanPlayer;

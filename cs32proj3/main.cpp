@@ -46,8 +46,10 @@ int main()
     {
         Game g(10, 10);
         addStandardShips(g);
-        Player* p1 = createPlayer("mediocre", "Mediocre Midori", g);
+//        Player* p1 = createPlayer("mediocre", "Mediocre Midori", g);
         Player* p2 = createPlayer("human", "Shuman the Human", g);
+        Player* p1 = createPlayer("awful", "fred", g);
+//        Player* p2 = createPlayer("human", "Shuman the Human", g);
         g.play(p1, p2);
         delete p1;
         delete p2;

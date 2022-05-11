@@ -109,7 +109,7 @@ string GameImpl::shipName(int shipId) const
     return m_Ships.at(shipId).m_name; //ID of ship corresponds to index in m_Ships
 }
 
-Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool shouldPause) //NOT DONE WITH THE SHITHIT, SHIPDESTROYED VARS YET, WHAT DO THEY DO
+Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool shouldPause) //CHECK IF GAME ENDS PROPERLY, WHAT SHOULD I PRINT FOR WINNER?
 {
     if(!p1->placeShips(b1)) //p1 places ships
         return nullptr; //return nullptr if failure to place
@@ -119,12 +119,12 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
     bool shotHit;
     bool shipDestroyed;
     int shipId;
-    //GAME PLAY STARTS
-    while(!b1.allShipsDestroyed() || !b2.allShipsDestroyed()){ //game ends once all ships are destroyed
+    //gameplay starts
+    while(!b1.allShipsDestroyed() && !b2.allShipsDestroyed()){ //game ends once all ships are destroyed for one board
         
-        cout<<p1->name()<<"'s turn. Board for "<<p2->name()<<": "<<endl; //announce p1 turn
-        Point attackOn2 = p1->recommendAttack(); //gets attacked point through player recommendation
+        cout<<p1->name()<<"'s turn.  Board for "<<p2->name()<<": "<<endl; //announce p1 turn
         b2.display(p1->isHuman()); //display p2's board, if p1 is human display shots only)
+        Point attackOn2 = p1->recommendAttack(); //gets attacked point through player recommendation
         if(b2.attack(attackOn2, shotHit, shipDestroyed, shipId)){ //first player attacks
             if(!shotHit) //if hit water
                 cout<<p1->name()<<" attacked "<<"("<<attackOn2.r<<","<<attackOn2.c<<")"<<" and missed, resulting in: "<<endl;
@@ -146,7 +146,7 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
         b2.display(p1->isHuman()); //display result of attack on b2
         
         //pause game if necessary
-        if(p1->isHuman()){
+        if(p1->isHuman() || p2->isHuman()){
             if(shouldPause)
                 waitForEnter();
         }
@@ -157,10 +157,9 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
         
         //repeat for p2
         
-        cout<<endl;
-        cout<<p2->name()<<"'s turn. Board for "<<p1->name()<<": "<<endl;
-        Point attackOn1 = p2->recommendAttack();
+        cout<<p2->name()<<"'s turn.  Board for "<<p1->name()<<": "<<endl;
         b1.display(p2->isHuman());
+        Point attackOn1 = p2->recommendAttack();
         if(b1.attack(attackOn1, shotHit, shipDestroyed, shipId)){
             if(!shotHit) //if hit water
                 cout<<p2->name()<<" attacked "<<"("<<attackOn1.r<<","<<attackOn1.c<<")"<<" and missed, resulting in: "<<endl;
@@ -180,17 +179,17 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
             p2->recordAttackResult(attackOn1, false, shotHit, shipDestroyed, shipId); //record invalid attack IDK IF I NEED THIS
             
         }
-        b2.display(p1->isHuman()); //display result of attack on b1
-    }
-    
-    //pause game if necessary
-    if(p2->isHuman()){
-        if(shouldPause)
-            waitForEnter();
-    }
-    else{
-        if(shouldPause)
-            waitForEnter();
+        b1.display(p2->isHuman()); //display result of attack on b1
+        
+        //pause game if necessary
+        if(p1->isHuman() || p2->isHuman()){
+            if(shouldPause)
+                waitForEnter();
+        }
+        else{
+            if(shouldPause)
+                waitForEnter();
+        }
     }
     
     //game over
