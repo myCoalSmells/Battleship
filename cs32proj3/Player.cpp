@@ -146,16 +146,24 @@ bool HumanPlayer::placeShips(Board& b){
 }
 
 Point HumanPlayer::recommendAttack(){
-    Point p(0,0);
+    Point p;
+    int r, c;
+    cout<<"Enter row and column of leftmost cell (e.g. 3 5): "; //prompt coordinates
+    while(!getLineWithTwoIntegers(r, c)){ //get input for coordinates
+        cout<<"You must enter two integers."<<endl;
+        cout<<"Enter row and column of leftmost cell (e.g. 3 5): "; //reprompt coordinates
+    }
+    p.r =r;
+    p.c = c;
     return p;
 }
 
 void HumanPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId){
-    ;
+    ; //human does not need this
 }
 
 void HumanPlayer::recordAttackByOpponent(Point p){
-    ;
+    ; //human does not need this
 }
 
 
