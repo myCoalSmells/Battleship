@@ -190,9 +190,26 @@ private:
 
 MediocrePlayer::MediocrePlayer(string nm, const Game& g) : Player(nm, g), m_lastCellAttacked(0,0){}
 
+bool placeShipAux();
+
+
+
 bool MediocrePlayer::placeShips(Board &b){
+    b.block(); //block random half of board
+    
+    //recursive algorithm
+    
+    
+    b.unblock(); //unblock board
+    
+    
+    //If all ships could be placed, this function returns true. If it is impossible to fit all
+//    of the ships on the board, given the set of blocked positions from the first step,
+//    then your function must go back to step 1 and try again if it hasn't yet done so 50
+//    times. If the function has not returned true after 50 tries, then it must return false
     return false;
 }
+
 
 Point MediocrePlayer::recommendAttack(){
     Point p(0,0);
@@ -204,7 +221,7 @@ void MediocrePlayer::recordAttackResult(Point p, bool validShot, bool shotHit, b
 }
 
 void MediocrePlayer::recordAttackByOpponent(Point p){
-    ;
+    ; //does nothing for mediocre player
 }
 
 //*********************************************************************

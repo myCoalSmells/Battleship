@@ -25,15 +25,13 @@ class BoardImpl
       //        to be useful:
     const Game& m_game;
     char m_board[MAXROWS][MAXCOLS]; //keeps track of the visual board
-    int m_row; //DO I NEED THESE?
-    int m_col;
     vector <int> m_shipIDs; //keeps track of the shipIDs
     vector <int> m_sunkShips; //keeps track of the sunken ships
     
 };
 
 BoardImpl::BoardImpl(const Game& g)
-: m_game(g), m_row(g.rows()), m_col(g.cols()) //set rows and cols to how they were intialized in game
+: m_game(g) //set rows and cols to how they were intialized in game
 {
     //fill board with '.'
     for(int i=0; i<m_game.rows(); i++){
@@ -92,7 +90,7 @@ void BoardImpl::unblock()
 
 bool BoardImpl::placeShip(Point topOrLeft, int shipId, Direction dir)
 {
-    if(shipId >= m_game.nShips()) //check if shipID is valid
+    if(shipId < 0 || shipId >= m_game.nShips()) //check if shipID is valid
         return false;
     
     if(find(m_shipIDs.begin(), m_shipIDs.end(), shipId) != m_shipIDs.end()) //return false if m_shipIDs already contains this ship using find algorithm
@@ -138,9 +136,9 @@ bool BoardImpl::placeShip(Point topOrLeft, int shipId, Direction dir)
 }
     
 
-bool BoardImpl::unplaceShip(Point topOrLeft, int shipId, Direction dir)
+bool BoardImpl::unplaceShip(Point topOrLeft, int shipId, Direction dir) //STILL NEEDS TO BE TESTED
 {
-    if(shipId >= m_game.nShips()) //check if shipID is valid 
+    if(shipId < 0 || shipId >= m_game.nShips()) //check if shipID is valid 
         return false;
     
     if(!m_game.isValid(topOrLeft)) //return false if point given is outside of board
@@ -151,17 +149,17 @@ bool BoardImpl::unplaceShip(Point topOrLeft, int shipId, Direction dir)
     
     //should not have to check if ship goes off board because from previous coniditional, if ship is in m_shipIDs, it must have been placed correctly. THIS ACTUALLY MAY BE WRONG
     
-    if(dir==HORIZONTAL){
-        if(m_game.shipLength(shipId) + topOrLeft.r > m_game.rows()) //return false if horizontal ship is outside of board
+    if(dir==VERTICAL){
+        if(m_game.shipLength(shipId) + topOrLeft.r > m_game.rows()) //return false if vertical ship is outside of board
             return false;
         
-        for(int i = topOrLeft.r; i < topOrLeft.r + m_game.shipLength(shipId); i++){ //return false if entire horizontal ship is not there
+        for(int i = topOrLeft.r; i < topOrLeft.r + m_game.shipLength(shipId); i++){ //return false if entire vertical ship is not there
             if(m_board[i][topOrLeft.c]!=m_game.shipSymbol(shipId)){
                 return false;
             }
         }
         
-        for(int i = topOrLeft.r; i < topOrLeft.r + m_game.shipLength(shipId); i++){ //remove horizontal ship on board
+        for(int i = topOrLeft.r; i < topOrLeft.r + m_game.shipLength(shipId); i++){ //remove vertical ship on board
             m_board[i][topOrLeft.c] = '.';
         }
         
@@ -169,8 +167,8 @@ bool BoardImpl::unplaceShip(Point topOrLeft, int shipId, Direction dir)
         return true;
     }
     
-    if(dir==VERTICAL){
-        if(m_game.shipLength(shipId) + topOrLeft.c > m_game.cols()) //return false if vertical ship is outside of board
+    if(dir==HORIZONTAL){
+        if(m_game.shipLength(shipId) + topOrLeft.c > m_game.cols()) //return false if horizontal ship is outside of board
             return false;
         
         for(int i = topOrLeft.c; i < topOrLeft.c + m_game.shipLength(shipId); i++){ //return false if entire ship is not there
@@ -179,7 +177,7 @@ bool BoardImpl::unplaceShip(Point topOrLeft, int shipId, Direction dir)
             }
         }
         
-        for(int i = topOrLeft.c; i < topOrLeft.c + m_game.shipLength(shipId); i++){ //remove vertical ship on board
+        for(int i = topOrLeft.c; i < topOrLeft.c + m_game.shipLength(shipId); i++){ //remove horizontal ship on board
             m_board[topOrLeft.r][i] = '.';
         }
         

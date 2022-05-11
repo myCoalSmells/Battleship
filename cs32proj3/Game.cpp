@@ -109,7 +109,7 @@ string GameImpl::shipName(int shipId) const
     return m_Ships.at(shipId).m_name; //ID of ship corresponds to index in m_Ships
 }
 
-Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool shouldPause) //CHECK IF GAME ENDS PROPERLY, WHAT SHOULD I PRINT FOR WINNER?
+Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool shouldPause)
 {
     if(!p1->placeShips(b1)) //p1 places ships
         return nullptr; //return nullptr if failure to place
@@ -137,13 +137,23 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
             }
             p1->recordAttackResult(attackOn2, true, shotHit, shipDestroyed, shipId); //record valid attack
             p2->recordAttackByOpponent(attackOn2); //record attack from opponent
-            
+            b2.display(p1->isHuman()); //display result of attack on b2 (only shows if attack is valid)
         }
+        
         else{ //invalid attack
             cout<<p1->name()<<" wasted a shot at " <<"("<<attackOn2.r<<","<<attackOn2.c<<")"<<endl;
             p1->recordAttackResult(attackOn2, false, shotHit, shipDestroyed, shipId); //record invalid attack IDK IF I NEED THIS
         }
-        b2.display(p1->isHuman()); //display result of attack on b2
+//        b2.display(p1->isHuman()); //display result of attack on b2
+        
+        //if p1 destroys last ship
+        if(b2.allShipsDestroyed()){ //if p2 lost
+            if(p2->isHuman()) //and is human
+                b1.display(false); //display board of p1
+            cout<<p1->name()<<" wins!"<<endl;
+            return p1; //return p1 as winner
+        }
+        
         
         //pause game if necessary
         if(p1->isHuman() || p2->isHuman()){
@@ -172,14 +182,22 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
             }
             p2->recordAttackResult(attackOn1, true, shotHit, shipDestroyed, shipId); //record valid attack
             p1->recordAttackByOpponent(attackOn1); //record attack from opponent
-            
+            b1.display(p2->isHuman()); //display result of attack on b1 (only shows if attack is valid)
         }
         else{ //invalid attack
             cout<<p2->name()<<" wasted a shot at " <<"("<<attackOn1.r<<","<<attackOn1.c<<")"<<endl;
             p2->recordAttackResult(attackOn1, false, shotHit, shipDestroyed, shipId); //record invalid attack IDK IF I NEED THIS
             
         }
-        b1.display(p2->isHuman()); //display result of attack on b1
+//        b1.display(p2->isHuman()); //display result of attack on b1
+        
+        //if p2 destroys last ship
+        if(b1.allShipsDestroyed()){ //if p1 lost
+            if(p1->isHuman()) //and is human
+                b2.display(false); //display board of p2
+            cout<<p2->name()<<" wins!"<<endl;
+            return p2; //return p2 as winner
+        }
         
         //pause game if necessary
         if(p1->isHuman() || p2->isHuman()){
@@ -193,17 +211,17 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
     }
     
     //game over
-    if(b1.allShipsDestroyed()){ //if p1 lost
-        if(p1->isHuman()) //and is human
-            b2.display(false); //display board of p2
-        return p2; //return p2 as winner
-    }
-    
-    if(b2.allShipsDestroyed()){ //if p2 lost
-        if(p2->isHuman()) //and is human
-            b1.display(false); //display board of p1
-        return p1; //return p1 as winner
-    }
+//    if(b1.allShipsDestroyed()){ //if p1 lost
+//        if(p1->isHuman()) //and is human
+//            b2.display(false); //display board of p2
+//        return p2; //return p2 as winner
+//    }
+//
+//    if(b2.allShipsDestroyed()){ //if p2 lost
+//        if(p2->isHuman()) //and is human
+//            b1.display(false); //display board of p1
+//        return p1; //return p1 as winner
+//    }
     return nullptr;  // This compiles but may not be correct
 }
 
