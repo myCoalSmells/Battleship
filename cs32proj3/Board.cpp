@@ -92,7 +92,7 @@ void BoardImpl::unblock()
 
 bool BoardImpl::placeShip(Point topOrLeft, int shipId, Direction dir)
 {
-    if(shipId > 0) //check if shipID is valid FIX THIS
+    if(shipId >= m_game.nShips()) //check if shipID is valid
         return false;
     
     if(find(m_shipIDs.begin(), m_shipIDs.end(), shipId) != m_shipIDs.end()) //return false if m_shipIDs already contains this ship using find algorithm
@@ -101,11 +101,11 @@ bool BoardImpl::placeShip(Point topOrLeft, int shipId, Direction dir)
     if(!m_game.isValid(topOrLeft)) //return false if point given is outside of board
         return false;
     
-    if(dir==HORIZONTAL){
-        if(m_game.shipLength(shipId) + topOrLeft.r > m_game.rows()) //return false if horizontal ship will be outside of board
+    if(dir==VERTICAL){
+        if(m_game.shipLength(shipId) + topOrLeft.r > m_game.rows()) //return false if vertical ship will be outside of board
             return false;
         
-        for(int i = topOrLeft.r; i < topOrLeft.r + m_game.shipLength(shipId); i++){ //return false if horizontal ship will overlap other ship or blocked position
+        for(int i = topOrLeft.r; i < topOrLeft.r + m_game.shipLength(shipId); i++){ //return false if vertical ship will overlap other ship or blocked position
             if(m_board[i][topOrLeft.c]!='.'){
                 return false;
             }
@@ -118,11 +118,11 @@ bool BoardImpl::placeShip(Point topOrLeft, int shipId, Direction dir)
         return true;
     }
     
-    if(dir==VERTICAL){
-        if(m_game.shipLength(shipId) + topOrLeft.c > m_game.cols()) //return false if vertical ship will be outside of board
+    if(dir==HORIZONTAL){
+        if(m_game.shipLength(shipId) + topOrLeft.c > m_game.cols()) //return false if horizontal ship will be outside of board
             return false;
         
-        for(int i = topOrLeft.c; i < topOrLeft.c + m_game.shipLength(shipId); i++){ //return false if vertical ship will overlap other ship or blocked position
+        for(int i = topOrLeft.c; i < topOrLeft.c + m_game.shipLength(shipId); i++){ //return false if horizontal ship will overlap other ship or blocked position
             if(m_board[topOrLeft.r][i]!='.'){
                 return false;
             }
@@ -140,7 +140,7 @@ bool BoardImpl::placeShip(Point topOrLeft, int shipId, Direction dir)
 
 bool BoardImpl::unplaceShip(Point topOrLeft, int shipId, Direction dir)
 {
-    if(shipId > 0) //check if shipID is valid FIX THIS
+    if(shipId >= m_game.nShips()) //check if shipID is valid 
         return false;
     
     if(!m_game.isValid(topOrLeft)) //return false if point given is outside of board
