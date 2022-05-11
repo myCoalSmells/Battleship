@@ -202,7 +202,7 @@ void BoardImpl::display(bool shotsOnly) const
         cout << i << " "; //row indicator + space
         for(int j=0; j<m_game.cols(); j++){
             if(shotsOnly){
-                if(m_board[i][j]!='X' || m_board[i][j]!='o')
+                if(m_board[i][j]!='X' && m_board[i][j]!='o')
                     cout << "."; //board contents of shots only, otherwise just '.'
                 else{
                     cout << m_board[i][j]; //print out shots
@@ -246,7 +246,7 @@ bool BoardImpl::attack(Point p, bool& shotHit, bool& shipDestroyed, int& shipId)
         
         for(int i=0; i<m_game.rows(); i++){
             for(int j=0; j<m_game.cols(); j++){
-                if(m_board[p.r][p.c]==temp){ //looks through board and if the hit ship symbol remains, it means the ship is not sunk, therefore set shipDestroyed to false, and return true
+                if(m_board[i][j]==temp){ //looks through board and if the hit ship symbol remains, it means the ship is not sunk, therefore set shipDestroyed to false, and return true
                     shipDestroyed = false;
                     return true;
                 }
