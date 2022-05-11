@@ -84,6 +84,8 @@ bool GameImpl::addShip(int length, char symbol, string name)
     
     newShip.m_ID = static_cast<int>(m_Ships.size()); //set id of ship to index in m_ships IS THERE ANYTHING WRONG WITH USING STATIC CAST HERE
     m_Ships.push_back(newShip); //add ship to m_ships
+//    cout << "ship added" << endl;
+    
     return true;
 }
 

@@ -93,14 +93,56 @@ private:
     Point m_lastCellAttacked;
 };
 
-HumanPlayer::HumanPlayer(string nm, const Game& g) : Player(nm, g), m_lastCellAttacked(0,0){}
+HumanPlayer::HumanPlayer(string nm, const Game& g) : Player(nm, g), m_lastCellAttacked(0,0){} //constructor
 
 bool HumanPlayer::isHuman() const{
-    return true;
+    return true; //return true because is human
 }
 
 bool HumanPlayer::placeShips(Board& b){
-    return false;
+    cout<<name()<<" must place "<<game().nShips() <<" ships."<<endl;
+    
+    for(int i=0; i<game().nShips(); i++){
+        b.display(false); //display player's board
+        
+        
+        //GET DIRECTION
+        cout<<"Enter h or v for direction of " << game().shipName(i) <<" (length " <<game().shipLength(i) <<"): "; //prompt direction
+        string direction;
+        getline(cin, direction); //get input for direction
+        Direction d = HORIZONTAL; //default value in case
+        while(direction[0]!='h' && direction[0]!='v'){
+            cout<<"Direction must be h or v"<<endl; //reprompt
+            cout<<"Enter h or v for direction of " << game().shipName(i) <<" (length " <<game().shipLength(i) <<"): ";
+            getline(cin, direction); //get input for direction
+        }
+        
+        //setting enum properly
+        if(direction[0]=='h')
+            d = HORIZONTAL;
+        if(direction[0]=='v')
+            d = VERTICAL;
+
+        
+        int r, c;
+        cout<<"Enter row and column of leftmost cell (e.g. 3 5): "; //prompt coordinates
+        while(!getLineWithTwoIntegers(r, c)){ //get input for coordinates
+            cout<<"You must enter two integers."<<endl;
+            cout<<"Enter row and column of leftmost cell (e.g. 3 5): "; //reprompt coordinates
+        }
+        
+        while(!b.placeShip(Point(r,c), i, d)){ //while ship placement is invalid
+            cout<<"The ship can not be placed there."<<endl;
+            
+            cout<<"Enter row and column of leftmost cell (e.g. 3 5): "; //prompt coordinates
+            while(!getLineWithTwoIntegers(r, c)){ //get input for coordinates
+                cout<<"You must enter two integers."<<endl;
+                cout<<"Enter row and column of leftmost cell (e.g. 3 5): "; //reprompt coordinates
+            }
+        }
+    }
+    b.display(false);
+    return true;
 }
 
 Point HumanPlayer::recommendAttack(){
