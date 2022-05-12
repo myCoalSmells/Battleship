@@ -185,16 +185,17 @@ public:
     virtual void recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId);
     virtual void recordAttackByOpponent(Point p);
 private:
-    Point m_lastCellAttacked;
+    bool placeShipsAux(Board &b, int correctShips); //recursive algorithm for placeShips
+    
     bool state1;
-    vector<Point> visitedCells;
-    bool placeShipAux(Board &b, int correctShips);
+    vector<Point> attackedCells;
+    Point m_state2Center; //keeps track of the point that caused transition to state 2
 };
 
-MediocrePlayer::MediocrePlayer(string nm, const Game& g) : Player(nm, g), state1(true), m_lastCellAttacked(0,0){}
+MediocrePlayer::MediocrePlayer(string nm, const Game& g) : Player(nm, g), state1(true){}
 
 
-bool MediocrePlayer::placeShipAux(Board &b, int correctShips)
+bool MediocrePlayer::placeShipsAux(Board &b, int correctShips)
 {
     vector<Point> badCells; //keeps track of visited cells that did not previously work
     
@@ -216,17 +217,17 @@ bool MediocrePlayer::placeShipAux(Board &b, int correctShips)
 //                cout << "BOARD ATTEMPT" << endl;
 
                 
-                if(!placeShipAux(b, correctShips + 1)){ //place next ship, if placement was unsucessful (returned false), unplace the ship and look for a new spot
+                if(!placeShipsAux(b, correctShips + 1)){ //place next ship, if placement was unsucessful (returned false), unplace the ship and look for a new spot
                     if(!b.unplaceShip(p, correctShips, HORIZONTAL))
                        b.unplaceShip(p, correctShips, VERTICAL);
-                    badCells.push_back(p);
+                    badCells.push_back(p); //add current cell to badcells
 //                    cout << "UNPLACE AT" << endl;
 //                    b.display(false);
 //                    cout << "UNPLACE AT" << endl;
                     i=0;
-                    j=0;
+                    j=0; //research the list for possible spots
                 }
-                else{ //if next ship's placement was succesful return true
+                else{ //if next ship's placement was successful return true
                     return true;
                 }
             }
@@ -237,35 +238,100 @@ bool MediocrePlayer::placeShipAux(Board &b, int correctShips)
 }
 
 
-bool MediocrePlayer::placeShips(Board &b){ //INCORPORATE 50 ATTEMPTS
-    for(int i=0; i<50; i++){
+bool MediocrePlayer::placeShips(Board &b){
+    for(int i=0; i<50; i++){ //50 attempts
         b.block(); //block random half of board
         
         //recursive algorithm
-        if(placeShipAux(b, 0)){
+        if(placeShipsAux(b, 0)){
             b.unblock();
             return true;
         }
         
-        
         b.unblock(); //unblock board
     }
     return false;
-    
-    //If all ships could be placed, this function returns true. If it is impossible to fit all
-//    of the ships on the board, given the set of blocked positions from the first step,
-//    then your function must go back to step 1 and try again if it hasn't yet done so 50
-//    times. If the function has not returned true after 50 tries, then it must return false
 }
 
 
-Point MediocrePlayer::recommendAttack(){
-    Point p(0,0);
+Point MediocrePlayer::recommendAttack(){ //ADD COUNTER TO INFINITE LOOP (CROSS IS FILLED BUT NO SHIP SUNKEN)
+    Point p;
+    if(state1){ //state 1
+        cout << "I AM IN STATE ONE" << endl;
+        bool pInAttackedCells = false;
+        do {
+            pInAttackedCells = false;
+            p = game().randomPoint(); //set p to new random point
+            for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
+                if(p.r == attackedCells[r].r && p.c == attackedCells[r].c)
+                    pInAttackedCells = true;
+            }
+        } while (pInAttackedCells); //while p is contained within attacked cell set
+        
+        return p; //recommend p
+    }
+    
+    else{ //state 2
+        cout << "I AM IN STATE TWO WITH CENTER AT " << m_state2Center.r << " " << m_state2Center.c << endl;
+        bool pInAttackedCells = false;
+        bool pInCross = false;
+        do{
+            pInAttackedCells = false;
+            pInCross = false;
+            p = game().randomPoint(); //pick new random point
+            for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
+                if(p.r == attackedCells[r].r && p.c == attackedCells[r].c)
+                    pInAttackedCells = true;
+            }
+            if(((abs(m_state2Center.r - p.r) <= 4) && m_state2Center.c == p.c) || ((abs(m_state2Center.c - p.c) <= 4) && m_state2Center.r == p.r)){ //if p is in the attack cross
+                pInCross = true;
+            }
+            
+        } while(pInAttackedCells || !pInCross); //while p is contained within attacked cell set and while p is not in the cross
+        
+        return p;
+    }
+    
+    
+    
+
     return p;
 }
 
 void MediocrePlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId){
-    ;
+    if(!validShot) //if shot was not valid do nothing
+        return;
+    
+    attackedCells.push_back(p); //add p to list of attacked cells
+    
+    if(state1){ //state 1
+        if(!shotHit) //if shot didnt hit, stay in state 1
+            return;
+        else{
+            if(shipDestroyed) //if ship luckily destroyed, stay in state 1
+                return;
+            else{ //if shot hit and didnt destroy, set to state 2
+                state1 = false;
+                m_state2Center = p; //set point to the center of the "cross" of state 2
+                return;
+            }
+        }
+    }
+    
+    if(!state1){ //state 2
+        if(!shotHit) //if shot didnt hit, stay in state 2
+            return;
+        else{
+            if(shipDestroyed){ //ship got destroyed
+                state1 = true; //switch back to state 1
+                return;
+            }
+            else{ //if shot hit and didnt destroy, stay in state 2
+                return;
+            }
+        }
+        
+    }
 }
 
 void MediocrePlayer::recordAttackByOpponent(Point p){

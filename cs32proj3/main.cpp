@@ -7,17 +7,17 @@ using namespace std;
 
 bool addStandardShips(Game& g)
 {
-    return g.addShip(2, 'A', "aircraft carrier")  &&
-           g.addShip(2, 'B', "battleship")  &&
-           g.addShip(3, 'D', "destroyer")  &&
-           g.addShip(4, 'S', "submarine")  &&
-           g.addShip(5, 'P', "patrol boat");
-    
-//    return g.addShip(5, 'A', "aircraft carrier")  &&
-//           g.addShip(4, 'B', "battleship")  &&
+//    return g.addShip(2, 'A', "aircraft carrier")  &&
+//           g.addShip(2, 'B', "battleship")  &&
 //           g.addShip(3, 'D', "destroyer")  &&
-//           g.addShip(3, 'S', "submarine")  &&
-//           g.addShip(2, 'P', "patrol boat");
+//           g.addShip(4, 'S', "submarine")  &&
+//           g.addShip(5, 'P', "patrol boat");
+    
+    return g.addShip(5, 'A', "aircraft carrier")  &&
+           g.addShip(4, 'B', "battleship")  &&
+           g.addShip(3, 'D', "destroyer")  &&
+           g.addShip(3, 'S', "submarine")  &&
+           g.addShip(2, 'P', "patrol boat");
 }
 
 int main()

@@ -217,7 +217,7 @@ bool BoardImpl::attack(Point p, bool& shotHit, bool& shipDestroyed, int& shipId)
         return false;
     }
     
-    if(m_board[p.r][p.c]=='o' || m_board[p.r][p.c]=='X' || m_board[p.r][p.c]=='#'){ //DONT KNOW ABOUT #, return false if point already attacked
+    if(m_board[p.r][p.c]=='o' || m_board[p.r][p.c]=='X'){  //return false if point already attacked
         shotHit = false;
         shipDestroyed = false;
         return false;
