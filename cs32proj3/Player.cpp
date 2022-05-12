@@ -97,14 +97,14 @@ bool HumanPlayer::isHuman() const{
     return true; //return true because is human
 }
 
-bool HumanPlayer::placeShips(Board& b){
+bool HumanPlayer::placeShips(Board& b){ //ADD CONDITION WHERE NOT ALL SHIPS WILL FIT ON BOARD(?)
     cout<<name()<<" must place "<<game().nShips() <<" ships."<<endl;
     
     for(int i=0; i<game().nShips(); i++){
         b.display(false); //display player's board
         
         
-        //GET DIRECTION
+        //get direction
         cout<<"Enter h or v for direction of " << game().shipName(i) <<" (length " <<game().shipLength(i) <<"): "; //prompt direction
         string direction;
         getline(cin, direction); //get input for direction
@@ -186,28 +186,76 @@ public:
     virtual void recordAttackByOpponent(Point p);
 private:
     Point m_lastCellAttacked;
+    bool state1;
+    vector<Point> visitedCells;
+    bool placeShipAux(Board &b, int correctShips);
 };
 
-MediocrePlayer::MediocrePlayer(string nm, const Game& g) : Player(nm, g), m_lastCellAttacked(0,0){}
-
-bool placeShipAux();
+MediocrePlayer::MediocrePlayer(string nm, const Game& g) : Player(nm, g), state1(true), m_lastCellAttacked(0,0){}
 
 
+bool MediocrePlayer::placeShipAux(Board &b, int correctShips)
+{
+    vector<Point> badCells; //keeps track of visited cells that did not previously work
+    
+    
+    if(correctShips==game().nShips()) //if the number of succesfully placed ships is the number of ships return true
+        return true;
+    for(int i=0; i<game().rows(); i++){ //loop until finds placeable cell for ship
+        for(int j=0; j<game().cols(); j++){
+            Point p(i, j);
+            bool pInBadCells = false;
+            for(int r=0; r<badCells.size(); r++){ //if point is in visited bad cell set pInBadCells to true
+                if(p.r == badCells[r].r && p.c == badCells[r].c)
+                    pInBadCells = true;
+            }
+            
+            if(!pInBadCells && (b.placeShip(p, correctShips, HORIZONTAL) || b.placeShip(p, correctShips, VERTICAL))){ //if placing ship was sucessful
+//                cout << "BOARD ATTEMPT" << endl;
+//                b.display(false);
+//                cout << "BOARD ATTEMPT" << endl;
 
-bool MediocrePlayer::placeShips(Board &b){
-    b.block(); //block random half of board
-    
-    //recursive algorithm
-    
-    
-    b.unblock(); //unblock board
-    
+                
+                if(!placeShipAux(b, correctShips + 1)){ //place next ship, if placement was unsucessful (returned false), unplace the ship and look for a new spot
+                    if(!b.unplaceShip(p, correctShips, HORIZONTAL))
+                       b.unplaceShip(p, correctShips, VERTICAL);
+                    badCells.push_back(p);
+//                    cout << "UNPLACE AT" << endl;
+//                    b.display(false);
+//                    cout << "UNPLACE AT" << endl;
+                    i=0;
+                    j=0;
+                }
+                else{ //if next ship's placement was succesful return true
+                    return true;
+                }
+            }
+//            cout << "REFINDING AT "  << i << " " << j << endl;
+        }
+    }
+    return false; //if ship could not be placed anywhere return false
+}
+
+
+bool MediocrePlayer::placeShips(Board &b){ //INCORPORATE 50 ATTEMPTS
+    for(int i=0; i<50; i++){
+        b.block(); //block random half of board
+        
+        //recursive algorithm
+        if(placeShipAux(b, 0)){
+            b.unblock();
+            return true;
+        }
+        
+        
+        b.unblock(); //unblock board
+    }
+    return false;
     
     //If all ships could be placed, this function returns true. If it is impossible to fit all
 //    of the ships on the board, given the set of blocked positions from the first step,
 //    then your function must go back to step 1 and try again if it hasn't yet done so 50
 //    times. If the function has not returned true after 50 tries, then it must return false
-    return false;
 }
 
 

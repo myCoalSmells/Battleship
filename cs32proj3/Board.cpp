@@ -61,20 +61,13 @@ void BoardImpl::block() //redo this with random position function
     for(int i=0; i < (m_game.rows() * m_game.cols())/2; i++){ //repeat rc/2 times
         Point p;
         do {
-            p = m_game.randomPoint();
-        } while (m_board[p.r][p.c]!='#'); //loop that finds position on board that is not already blocked
+            p = m_game.randomPoint(); //random point
+            if(i==0)
+                m_board[p.r][p.c] = '#'; //if first point being added, set to blocked
+        } while (m_board[p.r][p.c]=='#' && i!=0); //loop that finds position on board that is not already blocked
         m_board[p.r][p.c] = '#'; //block position
     }
-    
-    
-    //METHOD 2 GIVEN BUT DOES NOT CORRESPOND TO SPEC (?)
-//      // Block cells with 50% probability
-//    for (int r = 0; r < m_game.rows(); r++)
-//        for (int c = 0; c < m_game.cols(); c++)
-//            if (randInt(2) == 0)
-//            {
-//                m_board[r][c] = '#'; //# will signify a blocked spot
-//            }
+//    display(false);
 }
 
 void BoardImpl::unblock()
@@ -163,7 +156,7 @@ bool BoardImpl::unplaceShip(Point topOrLeft, int shipId, Direction dir) //STILL 
             m_board[i][topOrLeft.c] = '.';
         }
         
-//        m_shipIDs.erase(remove(m_shipIDs.begin(), m_shipIDs.end(), shipId), m_shipIDs.end()); //remove ship from m_shipIDs
+        m_shipIDs.erase(remove(m_shipIDs.begin(), m_shipIDs.end(), shipId), m_shipIDs.end()); //remove ship from m_shipIDs
         return true;
     }
     
@@ -181,7 +174,7 @@ bool BoardImpl::unplaceShip(Point topOrLeft, int shipId, Direction dir) //STILL 
             m_board[topOrLeft.r][i] = '.';
         }
         
-//        m_shipIDs.erase(remove(m_shipIDs.begin(), m_shipIDs.end(), shipId), m_shipIDs.end()); //remove ship from m_shipIDs
+        m_shipIDs.erase(remove(m_shipIDs.begin(), m_shipIDs.end(), shipId), m_shipIDs.end()); //remove ship from m_shipIDs
         return true;
     }
     

@@ -7,16 +7,22 @@ using namespace std;
 
 bool addStandardShips(Game& g)
 {
-    return g.addShip(5, 'A', "aircraft carrier")  &&
-           g.addShip(4, 'B', "battleship")  &&
+    return g.addShip(2, 'A', "aircraft carrier")  &&
+           g.addShip(2, 'B', "battleship")  &&
            g.addShip(3, 'D', "destroyer")  &&
-           g.addShip(3, 'S', "submarine")  &&
-           g.addShip(2, 'P', "patrol boat");
+           g.addShip(4, 'S', "submarine")  &&
+           g.addShip(5, 'P', "patrol boat");
+    
+//    return g.addShip(5, 'A', "aircraft carrier")  &&
+//           g.addShip(4, 'B', "battleship")  &&
+//           g.addShip(3, 'D', "destroyer")  &&
+//           g.addShip(3, 'S', "submarine")  &&
+//           g.addShip(2, 'P', "patrol boat");
 }
 
 int main()
 {
-    const int NTRIALS = 10;
+    const int NTRIALS = 1;
 
     cout << "Select one of these choices for an example of the game:" << endl;
     cout << "  1.  A mini-game between two mediocre players" << endl;
@@ -46,10 +52,10 @@ int main()
     {
         Game g(10, 10);
         addStandardShips(g);
-//        Player* p1 = createPlayer("mediocre", "Mediocre Midori", g);
-        Player* p2 = createPlayer("human", "Shuman the Human", g);
-        Player* p1 = createPlayer("awful", "fred", g);
+        Player* p1 = createPlayer("mediocre", "Mediocre Midori", g);
 //        Player* p2 = createPlayer("human", "Shuman the Human", g);
+//        Player* p1 = createPlayer("awful", "fred", g);
+        Player* p2 = createPlayer("human", "Shuman the Human", g);
         g.play(p1, p2);
         delete p1;
         delete p2;

@@ -111,15 +111,22 @@ string GameImpl::shipName(int shipId) const
 
 Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool shouldPause)
 {
-    if(!p1->placeShips(b1)) //p1 places ships
+    if(!p1->placeShips(b1)){ //p1 places ships
+        cout << "L" << endl;
         return nullptr; //return nullptr if failure to place
-    if(!p2->placeShips(b2)) //p2 places ships
+    }
+    if(!p2->placeShips(b2)){ //p2 places ships
+        cout << "L2" << endl;
         return nullptr; //return nullptr if failure to place
-    
+    }
     bool shotHit;
     bool shipDestroyed;
     int shipId;
     //gameplay starts
+    
+//    b1.display(false);
+    
+    
     while(!b1.allShipsDestroyed() && !b2.allShipsDestroyed()){ //game ends once all ships are destroyed for one board
         
         cout<<p1->name()<<"'s turn.  Board for "<<p2->name()<<": "<<endl; //announce p1 turn
