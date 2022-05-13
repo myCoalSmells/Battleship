@@ -4,6 +4,7 @@
 #include "globals.h"
 #include <iostream>
 #include <string>
+#include <stack>
 
 using namespace std;
 
@@ -390,14 +391,22 @@ public:
 private:
     bool placeShipsAux(Board &b, int correctShips); //recursive algorithm for placeShips
     
+    bool isValidAttack(Point p);
     bool state1;
     vector<Point> attackedCells;
     Point m_state2Center;
     Direction hunt;
     Point m_lastCellAttacked;
+    stack<Point> potentialTargets;
+    void pushPotentialTargets(int dir, Point p);
+    int m_dir; //0 = vert, 1 = horz
+    
+    int findShortestShip();
+    int probe(Point p, int x, int y);
+    bool isGoodGuess(Point p, int shipLength);
 };
 
-GoodPlayer::GoodPlayer(string nm, const Game& g) : Player(nm, g), state1(true), hunt(VERTICAL), m_lastCellAttacked(0,0){}
+GoodPlayer::GoodPlayer(string nm, const Game& g) : Player(nm, g), state1(true), hunt(VERTICAL), m_lastCellAttacked(0,0), m_dir(0){}
 
 bool GoodPlayer::placeShipsAux(Board &b, int correctShips)
 {
@@ -456,90 +465,101 @@ bool GoodPlayer::placeShips(Board &b){
     }
     return false;
 }
-//bool GoodPlayer::placeShips(Board &b){ //place s.t. ships will never be touching (reduces mediocre player's chance of randomly hitting a different ship when in state 2). Place towards center of board (if on the edges, it reduces the size of the cross that mediocre player must complete)
-////    int numShipsAdded = 0;
-////    int space = 4;
-////    Direction d = VERTICAL;
-////    //place first ship in random orientation
-////
-////    //place next ship s.t. it is at least 4 away
-////
-////    while(numShipsAdded!=game().nShips()){
-////        Point p = game().randomPoint();
-////        if(b.placeShip(p, 0, d))
-////
-////
-////
-////    }
-//
-//    //use same alg as mediocre player but block s.t. it blocks along diagonals that are spaced by length of longest ship
-//
-//
-//    return true;
-//}
+
+int GoodPlayer::findShortestShip(){
+    return 5;
+}
+
+int GoodPlayer::probe(Point p, int x, int y){
+    int freeSpots = 0;
+    Point a (p.r+x, p.c+y);
+    while(isValidAttack(a)){
+        Point b (a.r+x, a.c+y);
+        a = b;
+        freeSpots++;
+//        cout << freeSpots << endl;
+    }
+    return freeSpots;
+}
+
+bool GoodPlayer::isGoodGuess(Point p, int shipLength){
+    int up = probe(p, 0,1);
+    int down = probe(p, 0,-1);
+    int left = probe(p, -1,0);
+    int right = probe(p, 1,0);
+    if (left + right < shipLength - 1 || up + down < shipLength - 1) {
+        return false;
+    }
+    return true;
+}
+
+bool GoodPlayer::isValidAttack(Point p){
+    if(!game().isValid(p))
+        return false;
+    for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
+        if(p.r == attackedCells[r].r && p.c == attackedCells[r].c)
+            return false;;
+    }
+    return true;
+
+}
+
+void GoodPlayer::pushPotentialTargets(int dir, Point p){
+    if(dir==0){ //vertical
+        //adding South Cell (if viable)
+        Point S (p.r + 1, p.c);
+        if(isValidAttack(S))
+            potentialTargets.push(S);
+        
+        //adding North Cell (if viable)
+        Point N (p.r - 1, p.c);
+        if(isValidAttack(N))
+            potentialTargets.push(N);
+    }
+    if(dir==1){ //horizontal
+        //adding East Cell (if viable)
+        Point E (p.r, p.c + 1);
+        if(isValidAttack(E))
+            potentialTargets.push(E);
+        
+        //adding West Cell (if viable)
+        Point W (p.r, p.c - 1);
+        if(isValidAttack(W))
+            potentialTargets.push(W);
+    }
+    
+
+
+}
 
 Point GoodPlayer::recommendAttack(){ //two states, state1: go along diagonals. state 2: pick direction from hit, and if X, go along that direction largest ship size (basically cross but u pick one direction)
     Point p;
-    if(state1){ //state 1
-//        cout << "I AM IN STATE ONE" << endl;
-        bool pInAttackedCells = false;
-        bool isEvenCell = false;
-        do {
-            pInAttackedCells = false;
-            p = game().randomPoint(); //set p to new random point
-            for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
-                if(p.r == attackedCells[r].r && p.c == attackedCells[r].c)
-                    pInAttackedCells = true;
-            }
-            if((p.r + p.c)%2==0){ //pick only even cells
-                isEvenCell = true;
-            }
-        } while (pInAttackedCells || !isEvenCell); //while p is contained within attacked cell set
-        
-        return p; //recommend p
+    if(state1 || potentialTargets.empty()){ //state 1
+        cout << "I AM IN STATE ONE" << endl;
+//        do{
+//            p = game().randomPoint();
+//        } while(!isValidAttack(p));
+//
+//        return p; //recommend p
+        do{
+            p = game().randomPoint();
+        } while (!isGoodGuess(p, findShortestShip()));
     }
     
     else{ //state 2
-        cout << "I AM IN STATE TWO WITH CENTER AT " << m_state2Center.r << " " << m_state2Center.c << endl;
-        bool pInAttackedCells = false;
-        bool pInHunt = false;
-        do{
-            pInAttackedCells = false;
-            pInHunt = false;
-            p = game().randomPoint(); //pick new random point
-            for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
-                if(p.r == attackedCells[r].r && p.c == attackedCells[r].c)
-                    pInAttackedCells = true;
-            }
-            
-            if(hunt == VERTICAL){
-                if((abs(m_state2Center.r - p.r) <= 4) && m_state2Center.c == p.c)
-                    pInHunt = true;
-            }
-            
-            if(hunt == HORIZONTAL){
-                if((abs(m_state2Center.c - p.c) <= 4) && m_state2Center.r == p.r)
-                   pInHunt = true;
-            }
-            
-        } while(pInAttackedCells || !pInHunt); //while p is contained within attacked cell set and while p is not in the cross
-        
+        cout << "I AM IN STATE TWO" << m_state2Center.r << " " << m_state2Center.c << endl;
+        p = potentialTargets.top();
+        potentialTargets.pop();
         return p;
     }
-    
-    
-    
-
     return p;
 }
 
 void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId){
     if(!validShot) //if shot was not valid do nothing
         return;
-    
-    attackedCells.push_back(p); //add p to list of attacked cells
-    
 
+    attackedCells.push_back(p); //add p to list of attacked cells
     
     if(state1){ //state 1
         if(!shotHit) //if shot didnt hit, stay in state 1
@@ -549,64 +569,52 @@ void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool 
                 return;
             else{ //if shot hit and didnt destroy, set to state 2
                 state1 = false;
-                m_state2Center = p; //set point to the center of the "cross" of state 2
-                m_lastCellAttacked = p;
+                //push 4 surrounding cells
+                m_dir=0;
+                pushPotentialTargets(m_dir, p);
+                m_dir=1;
+                pushPotentialTargets(m_dir, p);
+                m_state2Center = p;
                 return;
             }
         }
     }
     
     else{ //state 2
-        int alreadyAttackedInHunt = 0;
-        int biggestPossibleHunt = 0;
-        
-        //checking vertical hunt for already attacked cells
-        if(hunt==VERTICAL){
-            for(int i=-4; i<5; i++){
-                Point a (m_state2Center.r + i, m_state2Center.c);
-                if(game().isValid(a))
-                    biggestPossibleHunt++;
-                for(int v=0; v< attackedCells.size(); v++){
-                    if((attackedCells[v].r == m_state2Center.r + i) && (attackedCells[v].c == m_state2Center.c))
-                        alreadyAttackedInHunt++;
-                }
-            }
-        }
-        
-        //checking horizontal hunt for already attacked cells, evaluating biggest possible hunt size
-        if(hunt==HORIZONTAL){
-            for(int i=-4; i<5; i++){
-                Point a (m_state2Center.r, m_state2Center.c+i);
-                if(game().isValid(a))
-                    biggestPossibleHunt++;
-                for(int v=0; v< attackedCells.size(); v++){
-                    if((attackedCells[v].c == m_state2Center.c + i) && (attackedCells[v].r == m_state2Center.r))
-                        alreadyAttackedInHunt++;
-                }
-            }
-        }
-        
-
-        
-        if(alreadyAttackedInHunt == biggestPossibleHunt){ //if cross is full, set state back to 1 (counts center twice so have to do 18)
-            cout << "hii" << endl;
-            biggestPossibleHunt = 0;
-            state1 = true;
+//        if(potentialTargets.empty()){ //if no more targets go back to state 1
+//            state1 = true;
+//            return;
+//        }
+            
+        if(!shotHit) //if shot didnt hit, stay in state 2
             return;
-        }
-        
-        if(!shotHit){ //if shot didnt hit, stay in state 2
-            return;
-        }
         else{
-            if(shipDestroyed){ //ship got destroyed
-                state1 = true; //switch back to state 1
-                return;
+            if(false){ //ship got destroyed
+//                cout << "switching back to 1" << endl;
+//                state1 = true; //switch back to state 1
+//                while(!potentialTargets.empty()){ //clear potential targets
+//                    potentialTargets.pop();
+//                }
+//                return;
             }
             else{ //if shot hit and didnt destroy, stay in state 2
-                if(m_lastCellAttacked.c == p.c)
-                    hunt = VERTICAL;
-                m_lastCellAttacked = p;
+                //given hit, add four surrounding cells to stack of potential next (only added if not attacked before)
+                if(m_state2Center.c == p.c){
+                    m_dir = 0;
+                }
+                else if(m_state2Center.r == p.r){
+                    m_dir = 1;
+                }
+                else{ //hit new ship
+                    m_state2Center = p;
+                    m_dir = 0;
+                    pushPotentialTargets(m_dir, p);
+                    m_dir = 1;
+                    pushPotentialTargets(m_dir, p);
+                }
+                pushPotentialTargets(m_dir, p);
+                
+//                cout << "my top: " << potentialTargets.top().r << " " << potentialTargets.top().c << endl;
                 return;
             }
         }
@@ -617,6 +625,206 @@ void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool 
 void GoodPlayer::recordAttackByOpponent(Point p){
     ;
 }
+
+
+
+
+
+//{
+//    if(!validShot) //if shot was not valid do nothing
+//        return;
+//
+//    attackedCells.push_back(p); //add p to list of attacked cells
+//
+//
+//
+//    if(state1){ //state 1
+//        if(!shotHit) //if shot didnt hit, stay in state 1
+//            return;
+//        else{
+//            if(shipDestroyed) //if ship luckily destroyed, stay in state 1
+//                return;
+//            else{ //if shot hit and didnt destroy, set to state 2
+//                state1 = false;
+//                m_state2Center = p; //set point to the center of the "cross" of state 2
+//                m_lastCellAttacked = p;
+//                return;
+//            }
+//        }
+//    }
+//
+//    else{ //state 2
+//        int alreadyAttackedInHunt = 0;
+//        int biggestPossibleHunt = 0;
+//
+//        //checking vertical hunt for already attacked cells
+//        if(hunt==VERTICAL){
+//            for(int i=-4; i<5; i++){
+//                Point a (m_state2Center.r + i, m_state2Center.c);
+//                if(game().isValid(a))
+//                    biggestPossibleHunt++;
+//                for(int v=0; v< attackedCells.size(); v++){
+//                    if((attackedCells[v].r == m_state2Center.r + i) && (attackedCells[v].c == m_state2Center.c))
+//                        alreadyAttackedInHunt++;
+//                }
+//            }
+//        }
+//
+//        //checking horizontal hunt for already attacked cells, evaluating biggest possible hunt size
+//        if(hunt==HORIZONTAL){
+//            for(int i=-4; i<5; i++){
+//                Point a (m_state2Center.r, m_state2Center.c+i);
+//                if(game().isValid(a))
+//                    biggestPossibleHunt++;
+//                for(int v=0; v< attackedCells.size(); v++){
+//                    if((attackedCells[v].c == m_state2Center.c + i) && (attackedCells[v].r == m_state2Center.r))
+//                        alreadyAttackedInHunt++;
+//                }
+//            }
+//        }
+//
+//
+//
+//        if(alreadyAttackedInHunt == biggestPossibleHunt){ //if cross is full, set state back to 1 (counts center twice so have to do 18)
+//            cout << "hii" << endl;
+//            biggestPossibleHunt = 0;
+//            state1 = true;
+//            return;
+//        }
+//
+//        if(!shotHit){ //if shot didnt hit, stay in state 2
+//            return;
+//        }
+//        else{
+//            if(shipDestroyed){ //ship got destroyed
+//                state1 = true; //switch back to state 1
+//                return;
+//            }
+//            else{ //if shot hit and didnt destroy, stay in state 2
+//
+////                if(m_lastCellAttacked.c == p.c)
+////                    hunt = VERTICAL;
+////                else{
+////                    hunt = HORIZONTAL;
+////                }
+////                m_lastCellAttacked = p;
+//                return;
+//            }
+//        }
+//    }
+//}
+
+////given hit, add four surrounding cells to stack of potential next (only added if not attacked before)
+//bool pInAttackedCells = false;
+//
+////adding South Cell (if viable)
+//Point S (p.r + 1, p.c);
+//for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
+//    if(S.r == attackedCells[r].r && S.c == attackedCells[r].c)
+//        pInAttackedCells = true;
+//}
+//if(game().isValid(S) && !pInAttackedCells)
+//    potentialTargets.push(S);
+//
+////adding North Cell (if viable)
+//pInAttackedCells = false;
+//Point N (p.r - 1, p.c);
+//for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
+//    if(N.r == attackedCells[r].r && N.c == attackedCells[r].c)
+//        pInAttackedCells = true;
+//}
+//if(game().isValid(N) && !pInAttackedCells)
+//    potentialTargets.push(N);
+//
+////adding East Cell (if viable)
+//pInAttackedCells = false;
+//Point E (p.r, p.c + 1);
+//for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
+//    if(E.r == attackedCells[r].r && E.c == attackedCells[r].c)
+//        pInAttackedCells = true;
+//}
+//if(game().isValid(E) && !pInAttackedCells)
+//    potentialTargets.push(E);
+//
+////adding West Cell (if viable)
+//pInAttackedCells = false;
+//Point W (p.r, p.c - 1);
+//for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
+//    if(W.r == attackedCells[r].r && W.c == attackedCells[r].c)
+//        pInAttackedCells = true;
+//}
+//if(game().isValid(W) && !pInAttackedCells)
+//    potentialTargets.push(W);
+//void GoodPlayer::recordAttackByOpponent(Point p){
+//    ;
+//}
+//                cout << "HELLO" << endl;
+//                bool pInAttackedCells = false;
+//
+//                if(m_lastCellAttacked.r == p.r && m_lastCellAttacked.c + 1 == p.c) //east
+//                    m_dir = 3;
+//                if(m_lastCellAttacked.r == p.r && m_lastCellAttacked.c - 1 == p.c) //west
+//                    m_dir = 2;
+//                if(m_lastCellAttacked.r - 1 == p.r && m_lastCellAttacked.c == p.c) //north
+//                    m_dir = 1;
+//                if(m_lastCellAttacked.r + 1 == p.r && m_lastCellAttacked.c == p.c) //south
+//                    m_dir = 0;
+//
+//                if(m_dir==0){
+//                    cout << "adwada" << endl;
+//                    pInAttackedCells = false;
+//
+////                adding South Cell (if viable)
+//                Point S (p.r + 1, p.c);
+//                    for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
+//                        if(S.r == attackedCells[r].r && S.c == attackedCells[r].c)
+//                            pInAttackedCells = true;
+//                    }
+//                if(game().isValid(S) && !pInAttackedCells){
+//                    cout<< "ADDING ANOTHER MF" << endl;
+//                        potentialTargets.push(S);
+//                }
+//                }
+//
+//                if(m_dir==1){
+//                    cout << "yooo" << endl;
+//
+//                    //adding North Cell (if viable)
+//                    pInAttackedCells = false;
+//                    Point N (p.r - 1, p.c);
+//                    for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
+//                        if(N.r == attackedCells[r].r && N.c == attackedCells[r].c)
+//                            pInAttackedCells = true;
+//                    }
+//                    if(game().isValid(N) && !pInAttackedCells)
+//                        potentialTargets.push(N);
+//                }
+//
+//                if(m_dir==3){
+//                    cout << "XD" << endl;
+//
+//                    //adding East Cell (if viable)
+//                    pInAttackedCells = false;
+//                    Point E (p.r, p.c + 1);
+//                    for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
+//                        if(E.r == attackedCells[r].r && E.c == attackedCells[r].c)
+//                            pInAttackedCells = true;
+//                    }
+//                    if(game().isValid(E) && !pInAttackedCells)
+//                        potentialTargets.push(E);
+//                }
+//
+//                if(m_dir==2){
+//                    //adding West Cell (if viable)
+//                    pInAttackedCells = false;
+//                    Point W (p.r, p.c - 1);
+//                    for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
+//                        if(W.r == attackedCells[r].r && W.c == attackedCells[r].c)
+//                            pInAttackedCells = true;
+//                    }
+//                    if(game().isValid(W) && !pInAttackedCells)
+//                        potentialTargets.push(W);
+//                }
 
 //*********************************************************************
 //  createPlayer

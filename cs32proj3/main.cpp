@@ -13,7 +13,7 @@ bool addStandardShips(Game& g)
 //           g.addShip(4, 'S', "submarine")  &&
 //           g.addShip(5, 'P', "patrol boat");
     
-    return g.addShip(6, 'A', "aircraft carrier")  &&
+    return g.addShip(5, 'A', "aircraft carrier")  &&
            g.addShip(4, 'B', "battleship")  &&
            g.addShip(3, 'D', "destroyer")  &&
            g.addShip(3, 'S', "submarine")  &&
@@ -22,7 +22,7 @@ bool addStandardShips(Game& g)
 
 int main()
 {
-    const int NTRIALS = 10;
+    const int NTRIALS = 1;
 
     cout << "Select one of these choices for an example of the game:" << endl;
     cout << "  1.  A mini-game between two mediocre players" << endl;
@@ -70,8 +70,8 @@ int main()
                  << " =============================" << endl;
             Game g(10, 10);
             addStandardShips(g);
-            Player* p1 = createPlayer("awful", "Awful Audrey", g);
-//            Player* p1 = createPlayer("good", "Good Audrey", g);
+//            Player* p1 = createPlayer("awful", "Awful Audrey", g);
+            Player* p1 = createPlayer("good", "Good Greg", g);
             Player* p2 = createPlayer("mediocre", "Mediocre Mimi", g);
             Player* winner = (k % 2 == 1 ?
                                 g.play(p1, p2, false) : g.play(p2, p1, false));
