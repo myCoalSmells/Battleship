@@ -111,11 +111,9 @@ string GameImpl::shipName(int shipId) const
 Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool shouldPause)
 {
     if(!p1->placeShips(b1)){ //p1 places ships
-        cout << "L" << endl;
         return nullptr; //return nullptr if failure to place
     }
     if(!p2->placeShips(b2)){ //p2 places ships
-        cout << "L2" << endl;
         return nullptr; //return nullptr if failure to place
     }
     bool shotHit;
@@ -154,9 +152,11 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
         
         //if p1 destroys last ship
         if(b2.allShipsDestroyed()){ //if p2 lost
-            if(p2->isHuman()) //and is human
-                b1.display(false); //display board of p1
             cout<<p1->name()<<" wins!"<<endl;
+            if(p2->isHuman()){ //and is human
+                cout << "Here is where " << p1->name() << "'s ships were:" << endl;
+                b1.display(false); //display board of p1
+            }
             return p1; //return p1 as winner
         }
         
@@ -199,9 +199,11 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
         
         //if p2 destroys last ship
         if(b1.allShipsDestroyed()){ //if p1 lost
-            if(p1->isHuman()) //and is human
-                b2.display(false); //display board of p2
             cout<<p2->name()<<" wins!"<<endl;
+            if(p1->isHuman()){ //and is human
+                cout << "Here is where " << p2->name() << "'s ships were:" << endl;
+                b2.display(false); //display board of p2
+            }
             return p2; //return p2 as winner
         }
         
