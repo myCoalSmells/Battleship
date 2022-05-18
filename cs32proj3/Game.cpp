@@ -148,7 +148,6 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
             cout<<p1->name()<<" wasted a shot at " <<"("<<attackOn2.r<<","<<attackOn2.c<<")"<<endl;
             p1->recordAttackResult(attackOn2, false, shotHit, shipDestroyed, shipId); //record invalid attack IDK IF I NEED THIS
         }
-//        b2.display(p1->isHuman()); //display result of attack on b2
         
         //if p1 destroys last ship
         if(b2.allShipsDestroyed()){ //if p2 lost
@@ -195,7 +194,6 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
             p2->recordAttackResult(attackOn1, false, shotHit, shipDestroyed, shipId); //record invalid attack IDK IF I NEED THIS
             
         }
-//        b1.display(p2->isHuman()); //display result of attack on b1
         
         //if p2 destroys last ship
         if(b1.allShipsDestroyed()){ //if p1 lost
