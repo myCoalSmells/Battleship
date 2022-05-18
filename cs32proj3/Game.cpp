@@ -46,8 +46,8 @@ void waitForEnter()
 
 GameImpl::GameImpl(int nRows, int nCols) : m_row(nRows), m_col(nCols)
 {
-    if(m_row>MAXROWS){
-        m_row = MAXROWS; //WHAT ELSE CAN I DO HERE IF M_ROW > MAXROWS
+    if(m_row>MAXROWS){ //defaults to maxrows and maxcols
+        m_row = MAXROWS;
     }
     
     if(m_col>MAXCOLS){
@@ -78,13 +78,12 @@ Point GameImpl::randomPoint() const
 bool GameImpl::addShip(int length, char symbol, string name)
 {
     Ship newShip(length, symbol, name);
-    if (newShip.m_length <= 0 && (newShip.m_length >= MAXROWS || newShip.m_length >= MAXCOLS )) //ship does not satisfy contraints. IS IT OK IF DIFFERENT SHIPS HAVE THE SAME SYMBOL, IF SO HAVE TO REDO BOARD::ATTACK
+    if (newShip.m_length <= 0 && (newShip.m_length >= MAXROWS || newShip.m_length >= MAXCOLS )) //ship does not satisfy contraints.
         return false;
     //ship satisfies
     
-    newShip.m_ID = static_cast<int>(m_Ships.size()); //set id of ship to index in m_ships IS THERE ANYTHING WRONG WITH USING STATIC CAST HERE
+    newShip.m_ID = static_cast<int>(m_Ships.size()); //set id of ship to index in m_ships
     m_Ships.push_back(newShip); //add ship to m_ships
-//    cout << "ship added" << endl;
     
     return true;
 }
@@ -216,19 +215,6 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
                 waitForEnter();
         }
     }
-    
-    //game over
-//    if(b1.allShipsDestroyed()){ //if p1 lost
-//        if(p1->isHuman()) //and is human
-//            b2.display(false); //display board of p2
-//        return p2; //return p2 as winner
-//    }
-//
-//    if(b2.allShipsDestroyed()){ //if p2 lost
-//        if(p2->isHuman()) //and is human
-//            b1.display(false); //display board of p1
-//        return p1; //return p1 as winner
-//    }
     return nullptr;  // This compiles but may not be correct
 }
 

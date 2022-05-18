@@ -68,7 +68,6 @@ void BoardImpl::block() //redo this with random position function
         } while (m_board[p.r][p.c]=='#' && i!=0); //loop that finds position on board that is not already blocked
         m_board[p.r][p.c] = '#'; //block position
     }
-//    display(false);
 }
 
 void BoardImpl::unblock()
@@ -141,7 +140,7 @@ bool BoardImpl::unplaceShip(Point topOrLeft, int shipId, Direction dir) //STILL 
     if(find(m_shipIDs.begin(), m_shipIDs.end(), shipId) == m_shipIDs.end()) //return false if m_shipIDs does not contain this ship using find algorithm
         return false;
     
-    //should not have to check if ship goes off board because from previous coniditional, if ship is in m_shipIDs, it must have been placed correctly. THIS ACTUALLY MAY BE WRONG
+    //should not have to check if ship goes off board because from previous coniditional, if ship is in m_shipIDs, it must have been placed correctly.
     
     if(dir==VERTICAL){
         if(m_game.shipLength(shipId) + topOrLeft.r > m_game.rows()) //return false if vertical ship is outside of board
