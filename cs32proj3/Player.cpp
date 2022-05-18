@@ -461,7 +461,7 @@ Point GoodPlayer::recommendAttack(){ //two states, state1: go along diagonals. s
             p = game().randomPoint();
             isEven = (p.r + p.c)%2 == 0;
             counter++;
-            if(counter>=50){
+            if(counter>=MAXROWS*MAXCOLS/2){
                 isEven = true; //if checkerboard is filled, any random point is fine
             }
         } while(!isValidAttack(p) || !isEven); //pick random points such that it hasnt been attacked before in a checkerboard pattern
