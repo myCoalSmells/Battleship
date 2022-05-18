@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <stack>
+#include <algorithm>
 
 using namespace std;
 
@@ -213,26 +214,19 @@ bool MediocrePlayer::placeShipsAux(Board &b, int correctShips)
             }
             
             if(!pInBadCells && (b.placeShip(p, correctShips, HORIZONTAL) || b.placeShip(p, correctShips, VERTICAL))){ //if placing ship was sucessful
-//                cout << "BOARD ATTEMPT" << endl;
-//                b.display(false);
-//                cout << "BOARD ATTEMPT" << endl;
 
                 
                 if(!placeShipsAux(b, correctShips + 1)){ //place next ship, if placement was unsucessful (returned false), unplace the ship and look for a new spot
                     if(!b.unplaceShip(p, correctShips, HORIZONTAL))
                        b.unplaceShip(p, correctShips, VERTICAL);
                     badCells.push_back(p); //add current cell to badcells
-//                    cout << "UNPLACE AT" << endl;
-//                    b.display(false);
-//                    cout << "UNPLACE AT" << endl;
                     i=0;
-                    j=0; //research the list for possible spots
+                    j=0; //re-search the list for possible spots
                 }
                 else{ //if next ship's placement was successful return true
                     return true;
                 }
             }
-//            cout << "REFINDING AT "  << i << " " << j << endl;
         }
     }
     return false; //if ship could not be placed anywhere return false
@@ -255,10 +249,9 @@ bool MediocrePlayer::placeShips(Board &b){
 }
 
 
-Point MediocrePlayer::recommendAttack(){ //ADD COUNTER TO INFINITE LOOP (CROSS IS FILLED BUT NO SHIP SUNKEN)
+Point MediocrePlayer::recommendAttack(){
     Point p;
     if(state1){ //state 1
-//        cout << "I AM IN STATE ONE" << endl;
         bool pInAttackedCells = false;
         do {
             pInAttackedCells = false;
@@ -273,7 +266,6 @@ Point MediocrePlayer::recommendAttack(){ //ADD COUNTER TO INFINITE LOOP (CROSS I
     }
     
     else{ //state 2
-//        cout << "I AM IN STATE TWO WITH CENTER AT " << m_state2Center.r << " " << m_state2Center.c << endl;
         
         bool pInAttackedCells = false;
         bool pInCross = false;
@@ -294,9 +286,6 @@ Point MediocrePlayer::recommendAttack(){ //ADD COUNTER TO INFINITE LOOP (CROSS I
         
         return p;
     }
-    
-    
-    
 
     return p;
 }
@@ -348,7 +337,6 @@ void MediocrePlayer::recordAttackResult(Point p, bool validShot, bool shotHit, b
         }
         
         if(alreadyAttackedInCross == biggestPossibleCross){ //if cross is full, set state back to 1 (counts center twice so have to add 1)
-//            cout << "hi: " << biggestPossibleCross << endl;
             state1 = true;
             return;
         }
@@ -389,100 +377,250 @@ public:
     virtual void recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId);
     virtual void recordAttackByOpponent(Point p);
 private:
-    bool placeShipsAux(Board &b, int correctShips); //recursive algorithm for placeShips
-    bool placeIsolatedShip(Board &b, Point p, int shipLength, Direction d);
-    vector<Point> cellsOfPlacedShips;
-    
     vector<Point> attackedCells;
     Point m_state2Center;
     bool isValidAttack(Point p);
     bool state1;
     stack<Point> potentialTargets;
     void pushPotentialTargets(int dir, Point p);
-    int m_dir; //0 = vert, 1 = horz
-    
-//    int findShortestShip();
-//    int probe(Point p, int x, int y);
-//    bool isGoodGuess(Point p, int shipLength);
+    int m_dir; //0 = vert, 1 = hor
 };
 
 GoodPlayer::GoodPlayer(string nm, const Game& g) : Player(nm, g), state1(true), m_dir(0){}
 
-bool GoodPlayer::placeIsolatedShip(Board &b, Point p, int shipLength, Direction d){ //(placeIsolatedShip(b, p, correctShips, HORIZONTAL) && (placeIsolatedShip(b, p, correctShips, VERTICAL))) &&
-    if(d == HORIZONTAL){
-        //checking top and bottom boundary of horizontal ship
-        for(int i=-1; i<2; i++){
-            Point test (p.r + i, p.c);
-            if(!b.placeShip(test, shipLength, HORIZONTAL)){ //if u cant place the same ship right next to the ship at point test, it means that there is another ship occupying that space, therefore find a new place to place a ship
-                b.display(false);
-                cout << p.r << p.c << endl;
-                return false;
-            }
-            else{
-                b.unplaceShip(test, shipLength, HORIZONTAL); //unplace test ship
-            }
-               
+
+
+bool GoodPlayer::placeShips(Board &b){ //places ships in alternate directions in random places
+    Direction d;
+    for(int i=0; i<game().nShips(); i++){ //place ships on game
+        Point p;
+        int counter = 0;
+        if(i%2==0){ //alternate directions
+            d = HORIZONTAL;
         }
-    }
-    if(d == VERTICAL){
-        //checking left and right boundary of vertical ship
-        for(int i=-1; i<2; i++){
-            Point test (p.r, p.c+i);
-            if(!b.placeShip(test, shipLength, VERTICAL)){ //if u cant place the same ship right next to the ship at point test, it means that there is another ship occupying that space, therefore find a new place to place a ship
-                return false;
-            }
-            else{
-                b.unplaceShip(test, shipLength, VERTICAL); //unplace test ship
-            }
-               
+        else{
+            d = VERTICAL;
         }
+
+        do{
+            counter++;
+            if(counter==50) //fails if 50 attempts
+                return false;
+            p = game().randomPoint();
+        } while(!b.placeShip(p, i, d)); //place random ship s.t. it fits on board
     }
-    b.placeShip(p, shipLength, d);
     return true;
 }
 
-bool GoodPlayer::placeShipsAux(Board &b, int correctShips)
-{
-    vector<Point> badCells; //keeps track of visited cells that did not previously work
-    
-    
-    if(correctShips==game().nShips()) //if the number of succesfully placed ships is the number of ships return true
-        return true;
-    for(int i=0; i<game().rows(); i++){ //loop until finds placeable cell for ship
-        for(int j=0; j<game().cols(); j++){
-//            Point p(i, j);
-            Point p = game().randomPoint();
-            bool pInBadCells = false;
-            for(int r=0; r<badCells.size(); r++){ //if point is in visited bad cell set pInBadCells to true
-                if(p.r == badCells[r].r && p.c == badCells[r].c)
-                    pInBadCells = true;
-            }
-            
-            if(!pInBadCells &&  (b.placeShip(p, correctShips, HORIZONTAL) || b.placeShip(p, correctShips, VERTICAL))){ //if placing partially isolated ship was sucessful
-                cout << "BOARD ATTEMPT" << endl;
-                b.display(false);
-                cout << "BOARD ATTEMPT" << endl;
 
-                
-                if(!placeShipsAux(b, correctShips + 1)){ //place next ship, if placement was unsucessful (returned false), unplace the ship and look for a new spot
-                    if(!b.unplaceShip(p, correctShips, HORIZONTAL))
-                       b.unplaceShip(p, correctShips, VERTICAL);
-                    badCells.push_back(p); //add current cell to badcells
-                    cout << "UNPLACE AT" << endl;
-                    b.display(false);
-                    cout << "UNPLACE AT" << endl;
-                    i=0;
-                    j=0; //research the list for possible spots
-                }
-                else{ //if next ship's placement was successful return true
-                    return true;
-                }
+bool GoodPlayer::isValidAttack(Point p){ //returns if attack will be valid
+    if(!game().isValid(p))
+        return false;
+    for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
+        if(p.r == attackedCells[r].r && p.c == attackedCells[r].c)
+            return false;;
+    }
+    return true;
+
+}
+
+void GoodPlayer::pushPotentialTargets(int dir, Point p){
+    if(dir==0){ //vertical
+        //adding South Cell (if viable)
+        Point S (p.r + 1, p.c);
+        if(isValidAttack(S))
+            potentialTargets.push(S);
+        
+        //adding North Cell (if viable)
+        Point N (p.r - 1, p.c);
+        if(isValidAttack(N))
+            potentialTargets.push(N);
+    }
+    if(dir==1){ //horizontal
+        //adding East Cell (if viable)
+        Point E (p.r, p.c + 1);
+        if(isValidAttack(E))
+            potentialTargets.push(E);
+        
+        //adding West Cell (if viable)
+        Point W (p.r, p.c - 1);
+        if(isValidAttack(W))
+            potentialTargets.push(W);
+    }
+    
+
+
+}
+
+Point GoodPlayer::recommendAttack(){ //two states, state1: go along diagonals. state 2: pick direction from hit, and if X, go along that direction largest ship size (basically cross but u pick one direction)
+    Point p;
+    
+    if(state1 || potentialTargets.empty()){ //state 1
+        state1 = true; //if no more targets to attack in stack go back to state 1
+        int counter = 0;
+        bool isEven = false;
+        do{
+            p = game().randomPoint();
+            isEven = (p.r + p.c)%2 == 0;
+            counter++;
+            if(counter>=50){
+                isEven = true; //if checkerboard is filled, any random point is fine
             }
-//            cout << "REFINDING AT "  << i << " " << j << endl;
+        } while(!isValidAttack(p) || !isEven); //pick random points such that it hasnt been attacked before in a checkerboard pattern
+
+        return p; //recommend p
+    }
+
+    else{ //state 2
+        p = potentialTargets.top(); //attack point on top of the stack
+        potentialTargets.pop();
+        return p;
+    }
+    return p;
+}
+
+void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId){
+    if(!validShot) //if shot was not valid do nothing
+        return;
+
+    attackedCells.push_back(p); //add p to list of attacked cells
+    
+    if(state1){ //state 1
+        if(!shotHit) //if shot didnt hit, stay in state 1
+            return;
+        else{
+            if(shipDestroyed){ //if ship luckily destroyed, stay in state 1
+                return;
+            }
+            else{ //if shot hit and didnt destroy, set to state 2
+                state1 = false;
+                //push 4 surrounding cells
+                m_dir=0;
+                pushPotentialTargets(m_dir, p);
+                m_dir=1;
+                pushPotentialTargets(m_dir, p);
+                m_state2Center = p;
+                return;
+            }
         }
     }
-    return false; //if ship could not be placed anywhere return false
+    
+    else{ //state 2
+        if(!shotHit) //if shot didnt hit, stay in state 2
+            return;
+        else{
+            if(shipDestroyed){ //ship got destroyed
+                state1 = true; //switch back to state 1
+                while(!potentialTargets.empty()){ //clear potential targets
+                    potentialTargets.pop();
+                }
+                return;
+            }
+            else{ //if shot hit and didnt destroy, stay in state 2
+                //determine direction of the hit based on its position in the context of the original hit
+                if(m_state2Center.c == p.c){ //vertical
+                    m_dir = 0;
+                }
+                else if(m_state2Center.r == p.r){ //horizontal
+                    m_dir = 1;
+                }
+                pushPotentialTargets(m_dir, p); //push new potential targets
+                return;
+            }
+        }
+        
+    }
 }
+
+void GoodPlayer::recordAttackByOpponent(Point p){
+    ;
+}
+
+
+//    bool placeShipsAux(Board &b, int correctShips); //recursive algorithm for placeShips
+//    bool placeIsolatedShip(Board &b, Point p, int shipLength, Direction d);
+//    vector<Point> cellsOfPlacedShips;
+//    int findShortestShip();
+//    int findLongestShip();
+//    int probe(Point p, int x, int y);
+//    bool isGoodGuess(Point p, int shipLength);
+//    vector<int> shipsISunk;
+//    vector<int> shipsRemaining;
+//bool GoodPlayer::placeIsolatedShip(Board &b, Point p, int shipLength, Direction d){ //(placeIsolatedShip(b, p, correctShips, HORIZONTAL) && (placeIsolatedShip(b, p, correctShips, VERTICAL))) &&
+//    if(d == HORIZONTAL){
+//        //checking top and bottom boundary of horizontal ship
+//        for(int i=-1; i<2; i++){
+//            Point test (p.r + i, p.c);
+//            if(!b.placeShip(test, shipLength, HORIZONTAL)){ //if u cant place the same ship right next to the ship at point test, it means that there is another ship occupying that space, therefore find a new place to place a ship
+//                b.display(false);
+//                cout << p.r << p.c << endl;
+//                return false;
+//            }
+//            else{
+//                b.unplaceShip(test, shipLength, HORIZONTAL); //unplace test ship
+//            }
+//
+//        }
+//    }
+//    if(d == VERTICAL){
+//        //checking left and right boundary of vertical ship
+//        for(int i=-1; i<2; i++){
+//            Point test (p.r, p.c+i);
+//            if(!b.placeShip(test, shipLength, VERTICAL)){ //if u cant place the same ship right next to the ship at point test, it means that there is another ship occupying that space, therefore find a new place to place a ship
+//                return false;
+//            }
+//            else{
+//                b.unplaceShip(test, shipLength, VERTICAL); //unplace test ship
+//            }
+//
+//        }
+//    }
+//    b.placeShip(p, shipLength, d);
+//    return true;
+//}
+
+//bool GoodPlayer::placeShipsAux(Board &b, int correctShips)
+//{
+//    vector<Point> badCells; //keeps track of visited cells that did not previously work
+//
+//
+//    if(correctShips==game().nShips()) //if the number of succesfully placed ships is the number of ships return true
+//        return true;
+//    for(int i=0; i<game().rows(); i++){ //loop until finds placeable cell for ship
+//        for(int j=0; j<game().cols(); j++){
+////            Point p(i, j);
+//            Point p = game().randomPoint();
+//            bool pInBadCells = false;
+//            for(int r=0; r<badCells.size(); r++){ //if point is in visited bad cell set pInBadCells to true
+//                if(p.r == badCells[r].r && p.c == badCells[r].c)
+//                    pInBadCells = true;
+//            }
+//
+//            if(!pInBadCells &&  (b.placeShip(p, correctShips, HORIZONTAL) || b.placeShip(p, correctShips, VERTICAL))){ //if placing partially isolated ship was sucessful
+//                cout << "BOARD ATTEMPT" << endl;
+//                b.display(false);
+//                cout << "BOARD ATTEMPT" << endl;
+//
+//
+//                if(!placeShipsAux(b, correctShips + 1)){ //place next ship, if placement was unsucessful (returned false), unplace the ship and look for a new spot
+//                    if(!b.unplaceShip(p, correctShips, HORIZONTAL))
+//                       b.unplaceShip(p, correctShips, VERTICAL);
+//                    badCells.push_back(p); //add current cell to badcells
+//                    cout << "UNPLACE AT" << endl;
+//                    b.display(false);
+//                    cout << "UNPLACE AT" << endl;
+//                    i=0;
+//                    j=0; //research the list for possible spots
+//                }
+//                else{ //if next ship's placement was successful return true
+//                    return true;
+//                }
+//            }
+////            cout << "REFINDING AT "  << i << " " << j << endl;
+//        }
+//    }
+//    return false; //if ship could not be placed anywhere return false
+//}
 
 
 //bool GoodPlayer::placeShips(Board &b){
@@ -499,31 +637,24 @@ bool GoodPlayer::placeShipsAux(Board &b, int correctShips)
 //    }
 //    return false;
 //}
-
-//RANDOM PALCESHIPS RIGHT HERE
-bool GoodPlayer::placeShips(Board &b){
-    Direction d;
-    for(int i=0; i<game().nShips(); i++){
-        Point p;
-        int counter = 0;
-        if(i%2==0){
-            d = HORIZONTAL;
-        }
-        else{
-            d = VERTICAL;
-        }
-
-        do{
-            counter++;
-            if(counter==50)
-                return false;
-            p = game().randomPoint();
-        } while(!b.placeShip(p, i, d));
-//        } while(!placeIsolatedShip(b, p, i, d));
-
-    }
-    return true;
-}
+//NEW STATE 1*************************
+//    if(state1 || potentialTargets.empty()){ //state 1
+//        cout << findShortestShip() << endl;
+//        cout << "I AM IN STATE ONE" << endl;
+//        state1 = true; //if no more targets to attack in stack go back to state 1
+//        int count = 0;
+//        bool goodGuess = false;
+//        do{
+//            p = game().randomPoint();
+//            bool goodGuess = isGoodGuess(p, findShortestShip());
+//            count++;
+//            if(count>=100)
+//                goodGuess=true;
+//        } while(!isValidAttack(p) || goodGuess); //pick random points such that it hasnt been attacked before in a checkerboard pattern
+//
+//        return p; //recommend p
+//    }
+//NEW STATE 1*************************
 
 //"OPTIMAL PLACEMENT"
 //bool GoodPlayer::placeShips(Board &b){
@@ -567,11 +698,32 @@ bool GoodPlayer::placeShips(Board &b){
 //    }
 //}
 
-
+//THIS IS FOR BETTER STATE 1
 //int GoodPlayer::findShortestShip(){
-//    return 5;
+//    int shortest = game().shipLength(shipsRemaining[0]);
+//    for(int i=0; i<shipsRemaining.size(); i++){ //loop through all ships
+//        int x = game().shipLength(shipsRemaining[i]);
+//        if(x<shortest){
+//            shortest = x; //set shortest to length of shortest ship
+//        }
+//    }
+//    return shortest;
 //}
-//
+
+//THIS IS FOR BETTER STATE 2
+//int GoodPlayer::findLongestShip(){
+//    int longest = game().shipLength(shipsRemaining[0]);
+//    for(int i=0; i<shipsRemaining.size(); i++){ //loop through all ships
+//        int x = game().shipLength(shipsRemaining[i]);
+//        if(x>longest){
+//            longest = x; //set shortest to length of shortest ship
+//        }
+//    }
+//    return longest;
+//}
+
+
+
 //int GoodPlayer::probe(Point p, int x, int y){
 //    int freeSpots = 0;
 //    Point a (p.r+x, p.c+y);
@@ -583,7 +735,7 @@ bool GoodPlayer::placeShips(Board &b){
 //    }
 //    return freeSpots;
 //}
-//
+
 //bool GoodPlayer::isGoodGuess(Point p, int shipLength){
 //    int up = probe(p, 0,1);
 //    int down = probe(p, 0,-1);
@@ -594,148 +746,7 @@ bool GoodPlayer::placeShips(Board &b){
 //    }
 //    return true;
 //}
-
-bool GoodPlayer::isValidAttack(Point p){
-    if(!game().isValid(p))
-        return false;
-    for(int r=0; r<attackedCells.size(); r++){ //if point is in attacked cell set pInAttackedCells to true
-        if(p.r == attackedCells[r].r && p.c == attackedCells[r].c)
-            return false;;
-    }
-    return true;
-
-}
-
-void GoodPlayer::pushPotentialTargets(int dir, Point p){
-    if(dir==0){ //vertical
-        //adding South Cell (if viable)
-        Point S (p.r + 1, p.c);
-        if(isValidAttack(S))
-            potentialTargets.push(S);
-        
-        //adding North Cell (if viable)
-        Point N (p.r - 1, p.c);
-        if(isValidAttack(N))
-            potentialTargets.push(N);
-    }
-    if(dir==1){ //horizontal
-        //adding East Cell (if viable)
-        Point E (p.r, p.c + 1);
-        if(isValidAttack(E))
-            potentialTargets.push(E);
-        
-        //adding West Cell (if viable)
-        Point W (p.r, p.c - 1);
-        if(isValidAttack(W))
-            potentialTargets.push(W);
-    }
-    
-
-
-}
-
-Point GoodPlayer::recommendAttack(){ //two states, state1: go along diagonals. state 2: pick direction from hit, and if X, go along that direction largest ship size (basically cross but u pick one direction)
-    Point p;
-    if(state1 || potentialTargets.empty()){ //state 1
-//        cout << "I AM IN STATE ONE" << endl;
-        state1 = true; //if no more targets to attack in stack go back to state 1
-        int counter = 0;
-        bool isEven = false;
-        do{
-            p = game().randomPoint();
-            bool isEven = (p.r + p.c)%2 == 1;
-            counter++;
-            if(counter==50){
-                isEven = true; //if checkerboard is filled, any random point is fine
-            }
-        } while(!isValidAttack(p) || isEven); //pick random points such that it hasnt been attacked before in a checkerboard pattern
-
-        return p; //recommend p
-    }
-    
-    else{ //state 2
-//        cout << "I AM IN STATE TWO" << m_state2Center.r << " " << m_state2Center.c << endl;
-        p = potentialTargets.top(); //attack point on top of the stack
-        potentialTargets.pop();
-        return p;
-    }
-    return p;
-}
-
-void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId){
-    if(!validShot) //if shot was not valid do nothing
-        return;
-
-    attackedCells.push_back(p); //add p to list of attacked cells
-    
-    if(state1){ //state 1
-        if(!shotHit) //if shot didnt hit, stay in state 1
-            return;
-        else{
-            if(shipDestroyed) //if ship luckily destroyed, stay in state 1
-                return;
-            else{ //if shot hit and didnt destroy, set to state 2
-                state1 = false;
-                //push 4 surrounding cells
-                m_dir=0;
-                pushPotentialTargets(m_dir, p);
-                m_dir=1;
-                pushPotentialTargets(m_dir, p);
-                m_state2Center = p;
-                return;
-            }
-        }
-    }
-    
-    else{ //state 2
-//        if(potentialTargets.empty()){ //if no more targets go back to state 1
-//            state1 = true;
-//            return;
-//        }
-            
-        if(!shotHit) //if shot didnt hit, stay in state 2
-            return;
-        else{
-            if(shipDestroyed){ //ship got destroyed
-//                cout << "switching back to 1" << endl;
-                state1 = true; //switch back to state 1
-                while(!potentialTargets.empty()){ //clear potential targets
-                    potentialTargets.pop();
-                }
-                return;
-            }
-            else{ //if shot hit and didnt destroy, stay in state 2
-                //determine direction of the hit based on its position in the context of the original hit
-                if(m_state2Center.c == p.c){ //vertical
-                    m_dir = 0;
-                }
-                else if(m_state2Center.r == p.r){ //horizontal
-                    m_dir = 1;
-                }
-//                else{ //hit new ship
-//                    cout << "do i happen" << endl;
-//                    m_state2Center = p;
-//                    m_dir = 0;
-//                    pushPotentialTargets(m_dir, p);
-//                    m_dir = 1;
-//                    pushPotentialTargets(m_dir, p);
-//                }
-                pushPotentialTargets(m_dir, p);
-                return;
-            }
-        }
-        
-    }
-}
-
-void GoodPlayer::recordAttackByOpponent(Point p){
-    ;
-}
-
-
-
-
-
+//
 //{
 //    if(!validShot) //if shot was not valid do nothing
 //        return;
